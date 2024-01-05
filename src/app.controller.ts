@@ -4,14 +4,9 @@ import { AppService } from './app.service';
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
-
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
-  }
-
   @Post()
-  QAHttpController(@Body() dto: { message: string }): string {
-    return this.appService.getHello();
+  async QAHttpController(@Body() dto: { message: string }): Promise<string> {
+    if(!dto?.message?.length) return "Message must not be empty"
+    return await this.appService.QAHttpService(dto.message);
   }
 }

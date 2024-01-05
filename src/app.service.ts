@@ -14,36 +14,43 @@ import { StringOutputParser } from 'langchain/schema/output_parser';
 @Injectable()
 export class AppService {
 
-  private combineDocuments(docs) {
+  readonly sbApiKey = process.env.SUPABASE_API_KEY;
+  readonly sbUrl = process.env.SUPABASE_URL_LC_CHATBOT;
+  readonly openAIApiKey = process.env.OPENAI_API_KEY;
+  readonly modelName = process.env.LLM_MODEL_NAME
+
+  readonly llm: any = new ChatOpenAI({
+    openAIApiKey: this.openAIApiKey,
+    temperature: 0,
+    //modelName: "gpt-3.5-turbo-16k"
+  });
+
+  client = createClient(this.sbUrl, this.sbApiKey);
+
+  embeddings = new OpenAIEmbeddings({ openAIApiKey: this.openAIApiKey });
+
+  vectorStore = new SupabaseVectorStore(this.embeddings, {
+    client: this.client,
+    tableName: 'documents',
+    //tableName: 'landin',
+    queryName: 'match_documents',
+  });
+
+  private _combineDocuments(docs) {
     return docs.map((doc) => doc.pageContent).join('\n\n');
   }
 
-  getHello(): string {
-    return 'Hello World!';
-  }
   async QAHttpService(message: string) {
-    const sbApiKey = process.env.SUPABASE_API_KEY;
-    const sbUrl = process.env.SUPABASE_URL_LC_CHATBOT;
-    const openAIApiKey = process.env.OPENAI_API_KEY;
 
-    const llm = new ChatOpenAI({
-      openAIApiKey,
-      temperature: 0,
-      //modelName: "gpt-3.5-turbo-16k"
-    });
 
-    const client = createClient(sbUrl, sbApiKey);
+    // const llm = new ChatOpenAI({
+    //   openAIApiKey,
+    //   temperature: 0,
+    //   //modelName: "gpt-3.5-turbo-16k"
+    // });
 
-    const embeddings = new OpenAIEmbeddings({ openAIApiKey });
 
-    const vectorStore = new SupabaseVectorStore(embeddings, {
-      client,
-      tableName: 'documents',
-      //tableName: 'landin',
-      queryName: 'match_documents',
-    });
-
-    const retriever = vectorStore.asRetriever(2);
+    const retriever = this.vectorStore.asRetriever(1);
 
     const standaloneQuestionTemplate = `Generate a standalone question, from this conversation , return in persian language.
       question: {question} 
@@ -55,7 +62,7 @@ export class AppService {
 
     const answerTemplate = `You are a helpful and enthusiastic support bot who can answer a given question about ساپ based on the context provided. 
   Try to find the answer in the context. If you really don't know the answer, say "I'm sorry, I don't know the answer to that."
-   And direct the questioner to email sap@digikala.com. Don't try to make up an answer. Always speak as if you were chatting to a friend and also speake in persian.
+   And direct the questioner to email email@sap.com. Don't try to make up an answer. Always speak as if you were chatting to a friend and give as much information as you can also always speake in persian.
    context: {context}
    question: {question}
    answer: `;
@@ -63,7 +70,7 @@ export class AppService {
 
     const standaloneQuestionChain = RunnableSequence.from([
       standaloneQuestionPrompt,
-      llm,
+      this.llm,
       new StringOutputParser(),
       // (e) => {
       //     console.log(e);
@@ -77,7 +84,7 @@ export class AppService {
       //     return e;
       // },
       retriever,
-      this.combineDocuments,
+      this._combineDocuments,
       // (e) => {
       //     console.log({ e });
       //     return e;
@@ -85,12 +92,12 @@ export class AppService {
     ]);
 
     const answerChain = RunnableSequence.from([
-      (e) => {
-        console.log({ e });
-        return e;
-      },
+      // (e) => {
+      //   console.log({ e });
+      //   return e;
+      // },
       answerPrompt,
-      llm,
+      this.llm,
       new StringOutputParser(),
     ]);
 
@@ -109,11 +116,12 @@ export class AppService {
     //const conv_history = [];
 
     const response = await chain.invoke({
-      question: `question: "
-چرا سیستم در زمان محاسبه فاکتور قطع می‌شود؟    "`,
+      question: `question:${message}`,
       //conv_history: formatConvHistory(conv_history)
     });
 
     console.log(response);
+
+    return response
   }
 }
