@@ -13,11 +13,10 @@ import { StringOutputParser } from 'langchain/schema/output_parser';
 
 @Injectable()
 export class AppService {
-
   readonly sbApiKey = process.env.SUPABASE_API_KEY;
   readonly sbUrl = process.env.SUPABASE_URL_LC_CHATBOT;
   readonly openAIApiKey = process.env.OPENAI_API_KEY;
-  readonly modelName = process.env.LLM_MODEL_NAME
+  readonly modelName = process.env.LLM_MODEL_NAME;
 
   readonly llm: any = new ChatOpenAI({
     openAIApiKey: this.openAIApiKey,
@@ -41,14 +40,11 @@ export class AppService {
   }
 
   async QAHttpService(message: string) {
-
-
     // const llm = new ChatOpenAI({
     //   openAIApiKey,
     //   temperature: 0,
     //   //modelName: "gpt-3.5-turbo-16k"
     // });
-
 
     const retriever = this.vectorStore.asRetriever(1);
 
@@ -122,6 +118,6 @@ export class AppService {
 
     console.log(response);
 
-    return response
+    return response;
   }
 }
