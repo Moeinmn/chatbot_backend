@@ -31,10 +31,6 @@ RUN npm install
 COPY --from=builder /app/dist ./dist
 
 ENV NODE_ENV=production
-ENV SUPABASE_API_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5YmFkdnRhZ2Z3ZWllc3pvY2dmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDIzNjgzMTgsImV4cCI6MjAxNzk0NDMxOH0.CwVLCUWyVEfg69TxwJlbc-J6LAfVGL91wRCl8fXy2H4
-ENV SUPABASE_URL_LC_CHATBOT=https://cybadvtagfweieszocgf.supabase.co
-ENV OPENAI_API_KEY=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
-ENV LLM_MODEL_NAME=gpt-3.5-turbo
 
 # Generate Prisma client
 # RUN npx prisma generate
